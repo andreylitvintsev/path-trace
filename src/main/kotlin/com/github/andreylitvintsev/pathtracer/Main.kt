@@ -17,23 +17,31 @@ fun main(args: Array<String>) {
     val colors = arrayOf(
         intArrayOf(1, 0, 0),
         intArrayOf(0, 1, 0),
-        intArrayOf(0,1, 1)
+        intArrayOf(0, 1, 1)
     )
 
     val camera = Camera(Point(0f, 0f, 0f), 300, 300, -1f)
-    val triangle = Triangle(Point(100f, 100f, -1f), Point(200f, 50f, -1f), Point(100f, 200f, -1f))
+    val triangle = Triangle(Point(0f, 0f, -1f), Point(100f, -50f, -1f), Point(0f, 100f, -1f))
     val triangleIntersectDetector = TriangleIntersectDetector(camera)
 
-    for (i in 0..camera.viewportWidth) {
-        for (j in 0..camera.viewportHeight) {
+    for (i in -camera.viewportWidth / 2..camera.viewportWidth / 2) {
+        for (j in -camera.viewportHeight / 2..camera.viewportHeight / 2) {
             val intersection = triangleIntersectDetector.findIntersection(i, j, triangle)
             if (intersection != null) {
                 println(intersection)
 
-                image.setRGB(i, j, Color.GREEN.rgb)
+                image.setRGB(screenMapX(i, image.width), screenMapY(j, image.height), Color.GREEN.rgb)
             }
         }
     }
 
     ImageIO.write(image, "png", File("./result.png"))
+}
+
+inline fun screenMapX(x: Int, width: Int): Int {
+    return width / 2 + x
+}
+
+inline fun screenMapY(y: Int, height: Int): Int {
+    return height / 2 - y
 }
