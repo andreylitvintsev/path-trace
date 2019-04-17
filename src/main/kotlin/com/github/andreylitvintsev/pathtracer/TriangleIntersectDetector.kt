@@ -14,8 +14,8 @@ class TriangleIntersectDetector(private val camera: Camera) {
         TODO()
     }
 
-    fun findIntersection(viewportX: Int, viewportY: Int, triangle: Triangle): RayWithTriangleIntersection? {
-        val dir = Vector(camera.position, Point(viewportX.toFloat(), viewportY.toFloat(), camera.viewportPosition)).normalize()
+    fun findIntersection(viewportX: Float, viewportY: Float, triangle: Triangle): RayWithTriangleIntersection? {
+        val dir = Vector(camera.position, Point(viewportX, viewportY, camera.focalLength)).normalize()
 
         val edge1 = Vector(triangle.point1, triangle.point2)
         val edge2 = Vector(triangle.point1, triangle.point3)
