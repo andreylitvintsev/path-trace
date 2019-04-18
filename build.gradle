@@ -18,7 +18,10 @@ version '1.0-SNAPSHOT'
 sourceSets {
     main.kotlin.srcDirs += 'src/main/kotlin'
     main.java.srcDirs += 'src/main/java'
+//    main.resources.srcDir = 'src/resource'
 }
+
+
 
 repositories {
     mavenCentral()

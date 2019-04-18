@@ -3,26 +3,17 @@ package com.github.andreylitvintsev.pathtracer
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.*
 import javax.imageio.ImageIO
 
 fun main(args: Array<String>) {
     val image = BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
-//    for (i in 100..200) {
-//        for (j in 100..200) {
-//            image.setRGB(i, j, Color.RED.rgb)
-//        }
-//    }
-//    ImageIO.write(image, "png", File("./result.png"))
 
-    val colors = arrayOf(
-        intArrayOf(1, 0, 0),
-        intArrayOf(0, 1, 0),
-        intArrayOf(0, 1, 1)
-    )
+    val geometry = parseGeometry() // TODO: отслеживать глубину фигуры
 
-    val camera = Camera(Point(0f, 0f, 0f), 300f, 300f, 1f)
+    val camera = Camera(Point(0f, 0f, -1f), 0.98f * 25.4f, 0.98f * 25.4f/*0.735f * 25.4f*/, 35f)
 
-    val triangle = Triangle(Point(0f, 0f, 1f), Point(100f, -50f, 1f), Point(0f, 100f, 1f))
+//    val triangle = Triangle(Point(0f, 0f, 1000f), Point(100f, -50f, 1000f), Point(0f, 100f, 1000f))
     val triangleIntersectDetector = TriangleIntersectDetector(camera)
 
     val right = camera.apertureWidth.toDouble() / 2
@@ -42,13 +33,15 @@ fun main(args: Array<String>) {
             val x = (xIndex * apertureStepWidth + halfStepWidth + left).toFloat()
             val y = (yIndex * apertureStepHeight + halfStepHeight + bottom).toFloat()
 
-            val intersection = triangleIntersectDetector.findIntersection(x, y, triangle)
-            if (intersection != null) {
-                image.setRGB(xIndex, yIndex, Color.GREEN.rgb)
+            repeat(geometry.facesCount) { faceIndex ->
+                val triangle = geometry.getTriangleByIndex(faceIndex)
+                val intersection = triangleIntersectDetector.findIntersection(x, y, triangle)
+                if (intersection != null) {
+                    image.setRGB(xIndex, yIndex, Color.GREEN.rgb)
+                }
             }
         }
     }
-
 
 
 //    for (i in -camera.apertureWidth.toInt() / 2..camera.apertureWidth.toInt() / 2) {
@@ -63,6 +56,38 @@ fun main(args: Array<String>) {
 //    }
 
     ImageIO.write(image, "png", File("./result.png"))
+}
+
+fun parseGeometry(): Geometry {
+    val scanner = Scanner(File("untitled.ply").inputStream())
+
+    var vertexCount = -1
+    var faceCount = -1
+    var currentLine = scanner.nextLine()
+    while (currentLine != "end_header") {
+        when {
+            currentLine.startsWith("element vertex") -> vertexCount = currentLine.split(" ").last().toInt()
+            currentLine.startsWith("element face") -> faceCount = currentLine.split(" ").last().toInt()
+        }
+        currentLine = scanner.nextLine()
+    }
+    require(vertexCount != -1 && faceCount != -1)
+
+    val points = mutableListOf<Point>()
+    repeat(vertexCount) {
+        scanner.nextLine().split(" ").let {
+            points.add(Point(it[0].toFloat(), it[1].toFloat(), it[2].toFloat()))
+        }
+    }
+
+    val faceDescriptors = mutableListOf<Geometry.FaceDescriptor>()
+    repeat(faceCount) {
+        scanner.nextLine().split(" ").let {
+            faceDescriptors.add(Geometry.FaceDescriptor(intArrayOf(it[1].toInt(), it[2].toInt(), it[3].toInt())))
+        }
+    }
+
+    return Geometry(points, faceDescriptors)
 }
 
 inline fun screenMapX(x: Int, width: Int): Int {
