@@ -5,16 +5,7 @@ data class RayWithTriangleIntersection(val t: Float, val u: Float, val v: Float)
 
 class TriangleIntersectDetector(private val camera: Camera) {
 
-    fun isIntersectionExist(viewportX: Int, viewportY: Int, triangle: Triangle): Boolean {
-        if (!(camera.viewportLeft..camera.viewportRight).contains(viewportX))
-            throw IllegalArgumentException("Illegal 'x' with value '$viewportX'")
-        if (!(camera.viewportTop..camera.viewportBottom).contains(viewportY))
-            throw IllegalArgumentException("Illegal 'y' with value '$viewportY'")
-
-        TODO()
-    }
-
-    fun findIntersection(viewportX: Float, viewportY: Float, triangle: Triangle): RayWithTriangleIntersection? {
+    fun findIntersection(viewportX: Float, viewportY: Float, triangle: Triangle, ignoreBehindRay: Boolean = true): RayWithTriangleIntersection? {
         val dir = Vector(camera.position, Point(viewportX, viewportY, camera.focalLength)).normalize()
 
         val edge1 = Vector(triangle.point1, triangle.point2)
@@ -37,6 +28,10 @@ class TriangleIntersectDetector(private val camera: Camera) {
         if (v < 0f || u + v > 1f) return null
 
         val t = edge2.dot(qvec) * invDet
+
+        if (ignoreBehindRay && t < 0) {
+            return null
+        }
 
         return RayWithTriangleIntersection(t, u, v)
     }

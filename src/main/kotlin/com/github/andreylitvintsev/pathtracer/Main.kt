@@ -7,16 +7,13 @@ import java.util.*
 import javax.imageio.ImageIO
 
 fun main(args: Array<String>) {
-    val image = BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
+    val image = BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB)
 
     val geometry = parseGeometry()
-    // TODO: отслеживать глубину фигуры
     // TODO: поворот камеры
-    // TODO: корректное нахождение пересечения
 
     val camera = Camera(Point(0f, 0f, -20f), 0.98f * 25.4f, 0.98f * 25.4f/*0.735f * 25.4f*/, 35f)
 
-//    val triangle = Triangle(Point(0f, 0f, 1000f), Point(100f, -50f, 1000f), Point(0f, 100f, 1000f))
     val triangleIntersectDetector = TriangleIntersectDetector(camera)
 
     val right = camera.apertureWidth.toDouble() / 2
@@ -36,29 +33,25 @@ fun main(args: Array<String>) {
             val x = (xIndex * apertureStepWidth + halfStepWidth + left).toFloat()
             val y = (yIndex * apertureStepHeight + halfStepHeight + bottom).toFloat()
 
-            repeat(geometry.facesCount) { faceIndex ->
-                val triangle = geometry.getTriangleByIndex(faceIndex)
-                val intersection = triangleIntersectDetector.findIntersection(x, y, triangle)
-                if (intersection != null) {
-                    image.setRGB(xIndex, yIndex, Color.WHITE.rgb)
-                }
+            if (getAllIntersections(geometry, triangleIntersectDetector, x, y).isNotEmpty()) {
+                image.setRGB(xIndex, yIndex, Color.WHITE.rgb)
             }
         }
     }
 
-
-//    for (i in -camera.apertureWidth.toInt() / 2..camera.apertureWidth.toInt() / 2) {
-//        for (j in -camera.apertureHeight.toInt() / 2..camera.apertureHeight.toInt() / 2) {
-//            val intersection = triangleIntersectDetector.findIntersection(i, j, triangle)
-//            if (intersection != null) {
-////                println(intersection)
-//
-//                image.setRGB(screenMapX(i, image.width), screenMapY(j, image.height), Color.GREEN.rgb)
-//            }
-//        }
-//    }
-
     ImageIO.write(image, "png", File("./result.png"))
+}
+
+fun getAllIntersections(geometry: Geometry, triangleIntersectDetector: TriangleIntersectDetector, x: Float, y: Float): List<Triangle> {
+    val intersectionTriangles = mutableListOf<Triangle>()
+    repeat(geometry.facesCount) { faceIndex ->
+        val triangle = geometry.getTriangleByIndex(faceIndex)
+        val intersection = triangleIntersectDetector.findIntersection(x, y, triangle)
+        if (intersection != null) {
+            intersectionTriangles.add(triangle)
+        }
+    }
+    return intersectionTriangles
 }
 
 fun parseGeometry(): Geometry {
@@ -91,12 +84,4 @@ fun parseGeometry(): Geometry {
     }
 
     return Geometry(points, faceDescriptors)
-}
-
-inline fun screenMapX(x: Int, width: Int): Int {
-    return width / 2 + x
-}
-
-inline fun screenMapY(y: Int, height: Int): Int {
-    return height / 2 - y
 }
