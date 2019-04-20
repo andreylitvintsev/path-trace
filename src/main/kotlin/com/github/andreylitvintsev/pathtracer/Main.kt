@@ -3,6 +3,7 @@ package com.github.andreylitvintsev.pathtracer
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
+import java.lang.Float.max
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -33,8 +34,19 @@ fun main(args: Array<String>) {
             val x = (xIndex * apertureStepWidth + halfStepWidth + left).toFloat()
             val y = (yIndex * apertureStepHeight + halfStepHeight + bottom).toFloat()
 
-            if (getAllIntersections(geometry, triangleIntersectDetector, x, y).isNotEmpty()) {
-                image.setRGB(xIndex, yIndex, Color.WHITE.rgb)
+            val intersections = getAllIntersections(geometry, triangleIntersectDetector, x, y)
+            if (intersections.isNotEmpty()) {
+                val nearestIntersection = getNearestIntesection(intersections)
+                val rayDir = Vector(camera.position, Point(x, y, camera.focalLength)).revert().normalize()
+
+                val dotProduct = max(0f, nearestIntersection.first.normal.dot(rayDir))
+//                val colorComponent = 255 * dotProduct
+//                println(colorComponent)
+                val color = Color(dotProduct, dotProduct, dotProduct)
+
+                image.setRGB(xIndex, yIndex, color.rgb)
+            } else {
+                image.setRGB(xIndex, yIndex, Color(247, 191, 252).rgb)
             }
         }
     }
@@ -42,13 +54,22 @@ fun main(args: Array<String>) {
     ImageIO.write(image, "png", File("./result.png"))
 }
 
-fun getAllIntersections(geometry: Geometry, triangleIntersectDetector: TriangleIntersectDetector, x: Float, y: Float): List<Triangle> {
-    val intersectionTriangles = mutableListOf<Triangle>()
+fun getNearestIntesection(intersections: List<Pair<Surface, RayWithTriangleIntersection>>): Pair<Surface, RayWithTriangleIntersection> {
+    return intersections.minBy { it.second.t }!!
+}
+
+fun getAllIntersections(
+    geometry: Geometry,
+    triangleIntersectDetector: TriangleIntersectDetector,
+    x: Float,
+    y: Float
+): List<Pair<Surface, RayWithTriangleIntersection>> {
+    val intersectionTriangles = mutableListOf<Pair<Surface, RayWithTriangleIntersection>>()
     repeat(geometry.facesCount) { faceIndex ->
-        val triangle = geometry.getTriangleByIndex(faceIndex)
-        val intersection = triangleIntersectDetector.findIntersection(x, y, triangle)
+        val surface = geometry.getSurfaceByIndex(faceIndex)
+        val intersection = triangleIntersectDetector.findIntersection(x, y, surface.triangle)
         if (intersection != null) {
-            intersectionTriangles.add(triangle)
+            intersectionTriangles.add(Pair(surface, intersection))
         }
     }
     return intersectionTriangles
@@ -70,9 +91,11 @@ fun parseGeometry(): Geometry {
     require(vertexCount != -1 && faceCount != -1)
 
     val points = mutableListOf<Point>()
+    val normals = mutableListOf<Vector>()
     repeat(vertexCount) {
         scanner.nextLine().split(" ").let {
             points.add(Point(it[0].toFloat(), it[1].toFloat(), it[2].toFloat()))
+            normals.add(Vector(it[3].toFloat(), it[4].toFloat(), it[5].toFloat()))
         }
     }
 
@@ -83,5 +106,5 @@ fun parseGeometry(): Geometry {
         }
     }
 
-    return Geometry(points, faceDescriptors)
+    return Geometry(points, normals, faceDescriptors)
 }

@@ -36,6 +36,13 @@ data class Vector(
         return Vector(resultX, resultY, resultZ)
     }
 
+    fun revert(): Vector {
+        val resultX = -this.x
+        val resultY = -this.y
+        val resultZ = -this.z
+        return Vector(resultX, resultY, resultZ)
+    }
+
     fun asPoint(): Point = Point(x, y, z)
 
 }
