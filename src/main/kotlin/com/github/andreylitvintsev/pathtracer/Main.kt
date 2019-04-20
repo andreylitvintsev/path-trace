@@ -9,9 +9,12 @@ import javax.imageio.ImageIO
 fun main(args: Array<String>) {
     val image = BufferedImage(300, 300, BufferedImage.TYPE_INT_RGB);
 
-    val geometry = parseGeometry() // TODO: отслеживать глубину фигуры
+    val geometry = parseGeometry()
+    // TODO: отслеживать глубину фигуры
+    // TODO: поворот камеры
+    // TODO: корректное нахождение пересечения
 
-    val camera = Camera(Point(0f, 0f, -1f), 0.98f * 25.4f, 0.98f * 25.4f/*0.735f * 25.4f*/, 35f)
+    val camera = Camera(Point(0f, 0f, -20f), 0.98f * 25.4f, 0.98f * 25.4f/*0.735f * 25.4f*/, 35f)
 
 //    val triangle = Triangle(Point(0f, 0f, 1000f), Point(100f, -50f, 1000f), Point(0f, 100f, 1000f))
     val triangleIntersectDetector = TriangleIntersectDetector(camera)
@@ -37,7 +40,7 @@ fun main(args: Array<String>) {
                 val triangle = geometry.getTriangleByIndex(faceIndex)
                 val intersection = triangleIntersectDetector.findIntersection(x, y, triangle)
                 if (intersection != null) {
-                    image.setRGB(xIndex, yIndex, Color.GREEN.rgb)
+                    image.setRGB(xIndex, yIndex, Color.WHITE.rgb)
                 }
             }
         }
