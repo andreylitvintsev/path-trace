@@ -1,4 +1,4 @@
 # path-trace
 
 ## результат работы 
-https://github.com/andreylitvintsev/path-trace/blob/master/result.png
+![Результат работы 1](https://github.com/andreylitvintsev/path-trace/blob/master/result.png)
